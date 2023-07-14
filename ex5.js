@@ -21,42 +21,140 @@
  * Ejemplo comate y uso de PokemonPedia: https://pastebin.com/raw/rbMVZq9t
  */
 
- 
-class PokemonPedia {
-    // Define aquí solamente el método estático
-}
 
-let bulbasaur = new Pokemon(1, "Bulbasaur", ['Grass'], 45, 49, 49 , {
+class PokemonPedia {
+    static async obtenerSinergiasPokemon(type) {
+      const response = await fetch('https://raw.githubusercontent.com/filipekiss/pokemon-type-chart/master/types.json');
+      const typeChart = await response.json();
+  
+      const sinergias = {
+        fuerte: [],
+        debil: [],
+      };
+  
+      Object.entries(typeChart).forEach(([key, value]) => {
+        if (value.fortalezas.includes(type)) {
+          sinergias.fuerte.push(key);
+        }
+        if (value.debilidades.includes(type)) {
+          sinergias.debil.push(key);
+        }
+      });
+  
+      if (sinergias.fuerte.length === 0) {
+        sinergias.fuerte = [];
+      }
+  
+      if (sinergias.debil.length === 0) {
+        sinergias.debil = [];
+      }
+  
+      return sinergias;
+    }
+  }
+  
+  class Pokemon {
+    constructor(id, name, types, life, attack, defense, specialAttack) {
+      this.id = id;
+      this.name = name;
+      this.types = types;
+      this.life = life;
+      this.attack = attack;
+      this.defense = defense;
+      this.specialAttack = specialAttack;
+      this.normalAttacks = 0;
+    }
+  
+    atacar(pokemon) {
+      let attackNumber = Math.floor(Math.random() * this.attack);
+      let defenseNumber = Math.floor(Math.random() * pokemon.defense);
+      let pokemonBLife = pokemon.life - (attackNumber - defenseNumber);
+  
+      console.log(`${this.name} ataca a ${pokemon.name}.`);
+      console.log(`${this.name} ataca con ${attackNumber} puntos de daño.`);
+      console.log(`${pokemon.name} consigue una defensa de ${defenseNumber} puntos.`);
+  
+      if (attackNumber < defenseNumber) {
+        console.log(`${this.name} ha fallado el ataque!`);
+      } else if (attackNumber > defenseNumber) {
+        console.log(`${this.name} asesta ${attackNumber - defenseNumber} puntos de daño.`);
+      }
+  
+      console.log(`La salud de ${pokemon.name} es ahora de ${pokemonBLife} puntos de vida.`);
+  
+      this.normalAttacks++;
+  
+      if (this.normalAttacks % 3 === 0) {
+        this.ataqueEspecial(pokemon);
+      }
+    }
+  
+    ataqueEspecial(pokemon) {
+      let attackNumber = Math.floor(Math.random() * this.attack) * this.specialAttack.incremento;
+      let defenseNumber = Math.floor(Math.random() * pokemon.defense);
+      let pokemonBLife = pokemon.life - (attackNumber - defenseNumber);
+  
+      console.log(`${this.name} ataca a ${pokemon.name}.`);
+      console.log(`${this.name} ataca con ${attackNumber} puntos de daño.`);
+      console.log(`${pokemon.name} consigue una defensa de ${defenseNumber} puntos.`);
+  
+      if (attackNumber < defenseNumber) {
+        console.log(`${this.name} ha fallado el ataque!`);
+      } else if (attackNumber > defenseNumber) {
+        console.log(`${this.name} asesta ${attackNumber - defenseNumber} puntos de daño.`);
+      }
+  
+      console.log(`La salud de ${pokemon.name} es ahora de ${pokemonBLife} puntos de vida.`);
+  
+      this.normalAttacks = 0;
+  
+      const sinergias = PokemonPedia.obtenerSinergiasPokemon(this.types[0].toLowerCase());
+  
+      let typeMatch = false;
+      for (const type of this.types) {
+        if (sinergias.fuerte.includes(type)) {
+          this.specialAttack.incremento *= 2;
+          typeMatch = true;
+          break;
+        } else if (sinergias.debil.includes(type)) {
+          this.specialAttack.incremento *= 0.5;
+          typeMatch = true;
+          break;
+        }
+      }
+  
+      if (!typeMatch) {
+        this.specialAttack.incremento = 1.0;
+      }
+    }
+  }
+  
+  // Test PokemonPedia
+  PokemonPedia.obtenerSinergiasPokemon('Grass')
+    .then(result => console.log(result))
+    .catch(error => console.error(error));
+  
+  // Test Combat
+  let bulbasaur = new Pokemon(1, "Bulbasaur", ['Grass'], 45, 49, 49, {
     especial: "Hoja afilada",
     incremento: 1.5
-})
-let squirtle = new Pokemon(1, "Squirtle", ['Water'], 44, 48, 65, {
-    especial : "Pistola agua",
+  });
+  
+  let squirtle = new Pokemon(1, "Squirtle", ['Water'], 44, 48, 65, {
+    especial: "Pistola agua",
     incremento: 1.65
-})
+  });
+  
+  bulbasaur.ataqueEspecial(squirtle);
+  bulbasaur.atacar(squirtle);
+  bulbasaur.atacar(squirtle);
+  bulbasaur.atacar(squirtle);
+  bulbasaur.ataqueEspecial(squirtle);
+  
+  
+  
+  
+  
+  
 
-// // Prueba PokemonPedia
-// console.log(PokemonPedia.obtenerSinergiasPokemon('Grass'))
 
-// // Combate
-// bulbasaur.ataqueEspecial(squirtle)
-// bulbasaur.atacar(squirtle)
-// bulbasaur.atacar(squirtle)
-// bulbasaur.atacar(squirtle)
-// bulbasaur.ataqueEspecial(squirtle)
-
-// // Combate 2
-// let bulbasaur2 = new Pokemon(1, "Bulbasaur", ['Grass'], 45, 49, 49, {
-//     especial: "Hoja afilada",
-//     incremento: 1.5
-// })
-// let squirtle2 = new Pokemon(1, "Squirtle", ['Water'], 44, 48, 65, {
-//     especial: "Pistola agua",
-//     incremento: 1.65
-// })
-
-// // COMBATE 2
-// squirtle2.atacar(bulbasaur2)
-// squirtle2.atacar(bulbasaur2)
-// squirtle2.atacar(bulbasaur2)
-// squirtle2.ataqueEspecial(bulbasaur2)
